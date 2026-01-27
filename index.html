@@ -11,11 +11,37 @@
 <body>
 
     <nav class="sidebar">
-        <div class="brand">Tavora incidencias</div>
-    <img src="Diseño sin título.png" alt="Logo de Tavora" class="logo-tavora">
-        <a href="#" class="menu-item active" id="nav-dashboard">Tablero de Tickets</a>
-        <a href="#" class="menu-item btn-new-ticket" id="nav-new-ticket">Nuevo Ticket +</a>
-        <a href="#" class="menu-item" id="btn-logout">Cerrar sesión</a>
+        <div class="brand-top">
+            <img src="Diseño sin título.png" alt="Logo de Tavora" class="logo-tavora">
+            <div class="brand-text">
+                <span class="brand-name">Tavora</span>
+                <small class="brand-sub">Incidencias</small>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="#" class="menu-item active" id="nav-dashboard"><span class="icon">📋</span> Tablero</a>
+            <a href="#" class="menu-item btn-new-ticket" id="nav-new-ticket"><span class="icon">＋</span> Nueva incidencia</a>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="search" placeholder="Buscar tickets, usuarios..." aria-label="Buscar">
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="profile">
+                <div class="profile-avatar" aria-hidden="true">👤</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="profile-name">Invitado</div>
+                    <small class="profile-role" id="profile-role">Visitante</small>
+                </div>
+            </div>
+
+            <div class="footer-actions">
+                <a href="reportes.html" class="menu-item" id="nav-reports"><span class="icon">📈</span> Reportes</a>
+                <a href="#" class="menu-item logout" id="btn-logout">Cerrar sesión</a>
+            </div>
+        </div>
     </nav>
 
     <main class="main-content">

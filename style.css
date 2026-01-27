@@ -25,43 +25,63 @@
 
         /* Sidebar */
         .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
+                    width: var(--sidebar-width);
+                    background: linear-gradient(180deg, #1f2a36 0%, #2b3a47 100%);
+                    color: #f6f7f9;
+                    padding: 28px 18px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 18px;
+                    align-items: stretch;
+                    justify-content: space-between;
         }
 
         .brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 40px;
-            text-align: center;
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    text-align: center;
         }
+
+        .brand-top { display:flex; align-items:center; gap:12px; margin-bottom: 6px; }
+        .brand-text { display:flex; flex-direction:column; }
+        .brand-name { font-weight:800; font-size:1.25rem; color: #fff; letter-spacing:2px; }
+        .brand-sub { color: rgba(255,255,255,0.65); font-size:0.75rem; }
 
         .menu-item {
-            padding: 15px;
+            padding: 12px 14px;
             cursor: pointer;
             text-decoration: none;
-            color: #bdc3c7;
-            transition: 0.3s;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: block;
+            color: rgba(255,255,255,0.9);
+            transition: all 0.22s ease;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            background: transparent;
         }
 
-        .menu-item:hover, .menu-item.active {
-            background-color: rgba(255,255,255,0.1);
-            color: white;
+        .menu-item .icon { opacity: 0.9; font-size: 1.05rem; }
+
+        .menu-item:hover {
+            transform: translateX(6px);
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
         }
 
-        .btn-new-ticket {
-            background-color: var(--accent-color);
-            color: white;
-            text-align: center;
-            font-weight: bold;
+        .menu-item.active {
+            background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            color: #fff;
         }
+
+        .btn-new-ticket { background: linear-gradient(90deg,var(--accent-color), #2e86c1); color: white; border-radius: 10px; }
+
+        .sidebar-search { margin: 8px 0 6px 0; }
+        .sidebar-search input { width: 100%; padding: 10px 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.04); color: #fff; }
+        .sidebar-search input::placeholder { color: rgba(255,255,255,0.6); }
         
         /* Main Content */
         .main-content {
@@ -69,6 +89,16 @@
             padding: 40px;
             overflow-y: auto;
         }
+
+/* Sidebar footer/profile */
+.sidebar-footer { display:flex; flex-direction:column; gap:10px; }
+.profile { display:flex; gap:10px; align-items:center; padding:8px 6px; border-radius:8px; background: rgba(255,255,255,0.02); }
+.profile-avatar { width:40px; height:40px; border-radius:50%; background: rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:18px; }
+.profile-name { font-weight:700; color:#fff; }
+.profile-role { color: rgba(255,255,255,0.65); font-size:0.8rem; }
+.footer-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.logout { padding:8px 10px; background: transparent; border-radius:8px; text-align:center; }
+.logout:hover { background: rgba(255,255,255,0.03); }
 
         .header {
             display: flex;
@@ -153,7 +183,19 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .btn-submit:hover { background-color: #2980b9; }
+
+    
+
+        .btn-submit:hover { background-color: #ffffff; }
+
+        .btn-submit:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.4);
+        }
+
+        .btn-submit:active {
+            background-color: #1a5276;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -227,6 +269,39 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
 .confirm-card h4 { margin: 0 0 8px 0; }
+.reports-main { max-width: 1000px; margin: 28px auto; padding: 0 18px; }
+.reports-card { background:white; padding:22px; border-radius:12px; box-shadow: 0 6px 28px rgba(0,0,0,0.06); margin-bottom:18px; }
+.reports-summary .summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap:12px; align-items:stretch; }
+.summary-grid { grid-template-columns: repeat(3,1fr); }
+.summary-item { padding:14px; border-radius:10px; background: #fbfdff; border:1px solid #eef6ff; display:flex; flex-direction:column; gap:6px; }
+.summary-item .value { font-size:20px; font-weight:800; }
+.summary-item .label { color:#666; font-size:0.9rem; }
+.summary-item.open { background: #f6fff7; border-color:#eaf7ec; }
+.summary-item.solved { background:#fff8f6; border-color:#fdeee6; }
+.summary-item.overdue { background:#fff6f6; border-color:#fdecea; }
+.summary-item.priorities { background:transparent; border:none; display:flex; flex-direction:column; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.chip { background:#f0f5ff; color:#174a9c; padding:6px 10px; border-radius:999px; font-weight:700; }
+
+.reports-list .ticket-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f2f4f6; }
+.ticket-main { max-width:72%; }
+.ticket-id { color:#999; font-weight:700; margin-bottom:6px; }
+.ticket-subject { font-size:1.05rem; font-weight:700; color:#222; }
+.ticket-meta { color:#666; font-size:0.9rem; margin-top:6px; }
+.ticket-side { text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.ticket-deadline { color:#666; font-size:0.9rem; }
+.ticket-status { padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; }
+.badge-solved { background: rgba(46,204,113,0.12); color: var(--success); }
+.badge-overdue { background: rgba(231,76,60,0.08); color: var(--danger); }
+.badge-open { background: rgba(52,152,219,0.08); color: var(--accent-color); }
+
+.muted { color:#777 }
+
+@media (max-width: 720px) {
+    .reports-summary .summary-grid { grid-template-columns: 1fr 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .ticket-main { max-width:60%; }
+}
 .confirm-card p { color: #444; }
 
 /* Logo styles for Tavora */

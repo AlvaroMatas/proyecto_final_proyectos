@@ -29,6 +29,9 @@ const confirmTitle = document.getElementById('confirm-title');
 const confirmMessage = document.getElementById('confirm-message');
 let pendingConfirmId = null;
 
+const profileNameEl = document.getElementById('profile-name');
+const profileRoleEl = document.getElementById('profile-role');
+
 // Overlay elements
 const roleOverlay = document.getElementById('role-overlay');
 const workerNameInput = document.getElementById('worker-name-input');
@@ -81,6 +84,7 @@ if (btnLogout) {
         showOverlay();
         // default to dashboard hidden
         switchView('dashboard');
+        updateProfileDisplay();
     });
 }
 
@@ -93,6 +97,13 @@ if (filterSelect) {
 function showOverlay() { roleOverlay.style.display = 'flex'; }
 function hideOverlay() { roleOverlay.style.display = 'none'; }
 
+function updateProfileDisplay() {
+    if (!profileNameEl || !profileRoleEl) return;
+    profileNameEl.textContent = currentUser && currentUser.name ? currentUser.name : 'Invitado';
+    if (!currentUser || !currentUser.role) profileRoleEl.textContent = 'Visitante';
+    else profileRoleEl.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Trabajador';
+}
+
 workerEnter.addEventListener('click', () => {
     const name = workerNameInput.value && workerNameInput.value.trim();
     if (!name) {
@@ -104,6 +115,7 @@ workerEnter.addEventListener('click', () => {
     hideOverlay();
     // go directly to the form for worker
     switchView('new');
+    updateProfileDisplay();
     // focus subject
     document.getElementById('subject').focus();
 });
@@ -115,6 +127,7 @@ adminEnter.addEventListener('click', () => {
         saveState();
         hideOverlay();
         switchView('dashboard');
+        updateProfileDisplay();
     } else {
         roleError.textContent = 'Contraseña incorrecta.';
     }
@@ -295,6 +308,9 @@ function initDemoDataIfEmpty() {
 // Load stored state and initialize
 loadState();
 initDemoDataIfEmpty();
+
+// Update profile display on load
+updateProfileDisplay();
 
 // If user already selected, skip overlay
 if (currentUser && currentUser.role) {

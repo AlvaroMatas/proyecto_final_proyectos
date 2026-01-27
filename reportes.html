@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reportes — Tavora</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="reports-header" style="padding:20px; background: linear-gradient(180deg, #1f2a36 0%, #2b3a47 100%);">
+    <div style="max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between; flex-direction: column; gap: 42px; padding: 20px;">
+      <div>
+        <h2 style="margin:0;color:#ffffff;">Reportes internos</h2>
+        <small style="color:#d8d8d8;">Resumen de incidencias guardadas en este navegador</small>
+      </div>
+      <div>
+        <a href="index.html" class="btn-submit" style="background:#2d7cc8; text-decoration: none;">Volver</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="reports-main">
+    <section id="summary" class="reports-card">
+      <h3>Resumen</h3>
+      <div id="summary-content" class="reports-summary">Cargando...</div>
+    </section>
+
+    <section id="list" class="reports-card">
+      <h3>Listado de tickets</h3>
+      <div id="tickets-list" class="reports-list">Cargando...</div>
+    </section>
+  </main>
+
+  <script>
+    // Seguridad simple: sólo admin puede ver esta página
+    try{
+      const u = JSON.parse(localStorage.getItem('currentUser'));
+      if(!u || !u.isAdmin){
+        // redirigir a inicio si no es admin
+        alert('Acceso denegado: sólo administradores.');
+        window.location.href = 'index.html';
+      }
+    } catch(e){ window.location.href = 'index.html'; }
+
+    function loadTickets(){
+      const raw = localStorage.getItem('tickets');
+      if(!raw) return [];
+      try { return JSON.parse(raw).map(t=> ({...t, slaDeadline: new Date(t.slaDeadline)})); } catch(e){ return []; }
+    }
+
+    const tickets = loadTickets();
+    const total = tickets.length;
+    const solved = tickets.filter(t=>t.status === 'Solucionado').length;
+    const open = total - solved;
+    const overdue = tickets.filter(t=> new Date(t.slaDeadline) < new Date() && t.status !== 'Solucionado').length;
+
+    // Count by priority
+    const byPriority = tickets.reduce((acc,t)=>{ acc[t.priority] = (acc[t.priority]||0)+1; return acc; }, {});
+
+    const summaryEl = document.getElementById('summary-content');
+    summaryEl.innerHTML = `
+      <div class="summary-grid">
+        <div class="summary-item total">
+          <div class="value">${total}</div>
+          <div class="label">Total</div>
+        </div>
+        <div class="summary-item open">
+          <div class="value">${open}</div>
+          <div class="label">Abiertas</div>
+        </div>
+        <div class="summary-item solved">
+          <div class="value">${solved}</div>
+          <div class="label">Solucionadas</div>
+        </div>
+        <div class="summary-item overdue">
+          <div class="value">${overdue}</div>
+          <div class="label">Vencidas</div>
+        </div>
+        <div class="summary-item priorities" style="grid-column: span 2;">
+          <div class="label">Por prioridad</div>
+          <div class="chips">
+            <span class="chip">Crítica: ${byPriority.critical||0}</span>
+            <span class="chip">Alta: ${byPriority.high||0}</span>
+            <span class="chip">Media: ${byPriority.medium||0}</span>
+            <span class="chip">Baja: ${byPriority.low||0}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const listEl = document.getElementById('tickets-list');
+    if(tickets.length === 0){ listEl.innerHTML = '<div class="muted">No hay tickets guardados en este navegador.</div>'; }
+    else{
+      const rows = tickets.map(t=>{
+        const sd = new Date(t.slaDeadline);
+        const statusClass = t.status === 'Solucionado' ? 'badge-solved' : (new Date(t.slaDeadline) < new Date() ? 'badge-overdue' : 'badge-open');
+        return `
+          <div class="ticket-row">
+            <div class="ticket-main">
+              <div class="ticket-id">${t.id}</div>
+              <div class="ticket-subject">${escapeHtml(t.subject)}</div>
+              <div class="ticket-meta">Reportado por: <strong>${escapeHtml(t.reporter||'')}</strong> • Prioridad: <span class="priority">${t.priority}</span></div>
+            </div>
+            <div class="ticket-side">
+              <div class="ticket-deadline">${sd.toLocaleString()}</div>
+              <div class="ticket-status ${statusClass}">${t.status}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      listEl.innerHTML = rows;
+    }
+
+    function escapeHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  </script>
+</body>
+</html>
