@@ -228,3 +228,26 @@
 }
 .confirm-card h4 { margin: 0 0 8px 0; }
 .confirm-card p { color: #444; }
+
+/* Logo styles for Tavora */
+.logo-tavora {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin: 8px auto 18px auto;
+    border: 4px solid rgba(255,255,255,0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease; 
+    background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+}
+.logo-tavora:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.32);
+}
+
+/* Make sure image stays nicely placed on small screens */
+@media (max-width: 480px) {
+    .logo-tavora { width: 88px; height: 88px; margin-bottom: 12px; }
+}
