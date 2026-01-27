@@ -1,0 +1,230 @@
+:root {
+            --primary-color: #34495e;
+            --secondary-color: #ecf0f1;
+            --accent-color: #3498db;
+            --text-dark: #2c3e50;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --success: #2ecc71;
+            --info: #9b59b6;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f9f9f9;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .menu-item {
+            padding: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #bdc3c7;
+            transition: 0.3s;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .btn-new-ticket {
+            background-color: var(--accent-color);
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            color: var(--text-dark);
+        }
+
+        /* Sections (Views) */
+        .section-view {
+            display: none; /* Hidden by default */
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        .section-view.active-section {
+            display: block; /* Show only the active one */
+        }
+
+        /* Ticket Table */
+        .ticket-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ticket-table th, .ticket-table td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ticket-table th {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        /* Badges for Priority */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-critical { background-color: #fadbd8; color: var(--danger); }
+        .badge-high { background-color: #fdebd0; color: var(--warning); }
+        .badge-medium { background-color: #d6eaf8; color: var(--accent-color); }
+        .badge-low { background-color: #d5f5e3; color: var(--success); }
+
+        /* SLA Timer Styles */
+        .sla-timer { font-family: monospace; font-weight: bold; }
+        .sla-ok { color: var(--success); }
+        .sla-warning { color: var(--warning); }
+        .sla-overdue { color: var(--danger); }
+
+
+        /* Form Styles */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-dark); }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-textarea { resize: vertical; height: 100px; }
+        .btn-submit {
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-submit:hover { background-color: #2980b9; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .main-content { padding: 20px; }
+        }
+
+/* Role overlay styles */
+.role-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+.role-overlay .role-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 800px;
+    max-width: 95%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+}
+.roles { display: flex; gap: 20px; }
+.role-option { flex: 1; padding: 16px; border: 1px solid #eee; border-radius: 8px; }
+.role-option h4 { margin-bottom: 8px; }
+.role-option p { color: #666; margin-bottom: 12px; }
+.role-option input { width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; }
+.role-error { color: var(--danger); margin-top: 12px; font-weight: 700; }
+
+/* Toast message */
+.toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    bottom: 30px;
+    background: #333;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 50;
+}
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); color: #063; }
+
+/* Row for solved tickets */
+.ticket-solved { opacity: 0.7; background: rgba(46, 204, 113, 0.03); }
+.btn-action { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; background: white; cursor: pointer; }
+.btn-action:hover { background: #f2f2f2; }
+
+/* Confirmation modal */
+.confirm-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+    z-index: 60;
+}
+.confirm-card {
+    background: white;
+    padding: 18px;
+    border-radius: 10px;
+    width: 420px;
+    max-width: 95%;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+.confirm-card h4 { margin: 0 0 8px 0; }
+.confirm-card p { color: #444; }

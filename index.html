@@ -1,13 +1,124 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <link rel="stylesheet" href="sty
-">
+    <link rel="icon" type="image/x-icon" href="Diseño sin título.png">
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tavora</title>
+    <title>Tavora | Sistema de Ticketing Help Desk</title>
 </head>
 <body>
+
+    <nav class="sidebar">
+        <div class="brand">Tavora incidencias</div>
+        <a href="#" class="menu-item active" id="nav-dashboard">Tablero de Tickets</a>
+        <a href="#" class="menu-item btn-new-ticket" id="nav-new-ticket">Nuevo Ticket +</a>
+        <a href="#" class="menu-item" id="btn-logout">Cerrar sesión</a>
+    </nav>
+
+    <main class="main-content">
+        
+        <section id="view-dashboard" class="section-view active-section">
+            <div class="header">
+                <h2>Tickets</h2>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div><span id="ticket-count">0</span> tickets</div>
+                    <select id="filter-select" class="form-select" style="width:160px;">
+                        <option value="all">Todos</option>
+                        <option value="open" selected>Abiertos</option>
+                        <option value="solved">Solucionados</option>
+                    </select>
+                </div>
+            </div>
+
+            <table class="ticket-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Asunto</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Reportado por</th>
+                        <th>SLA / Tiempo Límite</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="ticket-list-body">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: gray;">No hay tickets por el momento.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="view-new-ticket" class="section-view">
+             <div class="header">
+                <h2>Reportar Nueva Incidencia</h2>
+            </div>
+            <form id="create-ticket-form">
+                <div class="form-group">
+                    <label class="form-label">Asunto de la incidencia</label>
+                    <input type="text" id="subject" class="form-input" placeholder="Ej: No puedo acceder al correo" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descripción detallada</label>
+                    <textarea id="description" class="form-textarea" placeholder="Explica qué sucede..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prioridad (Impacta el SLA)</label>
+                    <select id="priority" class="form-select">
+                        <option value="low">Baja (SLA: 48h)</option>
+                        <option value="medium" selected>Media (SLA: 24h)</option>
+                        <option value="high">Alta (SLA: 8h)</option>
+                        <option value="critical">Crítica (SLA: 2h)</option>
+                    </select>
+                    <small style="color: gray; display: block; margin-top: 5px;">
+                        * El tiempo de respuesta se calcula automáticamente según la prioridad.
+                    </small>
+                </div>
+                <button type="submit" class="btn-submit">Crear Ticket</button>
+            </form>
+        </section>
+
+    </main>
     
+    <!-- Overlay for role selection / login -->
+    <div id="role-overlay" class="role-overlay">
+        <div class="role-card">
+            <h3>¿Quién eres?</h3>
+            <div class="roles">
+                <div class="role-option" id="role-trabajador">
+                    <h4>Trabajador</h4>
+                    <p>Reporta incidencias. Accedes introduciendo tu nombre.</p>
+                    <input type="text" id="worker-name-input" placeholder="Tu nombre" />
+                    <button id="worker-enter" class="btn-submit">Entrar como Trabajador</button>
+                </div>
+
+                <div class="role-option" id="role-admin">
+                    <h4>Administrador</h4>
+                    <p>Acceso con contraseña.</p>
+                    <input type="password" id="admin-pass-input" placeholder="Contraseña" />
+                    <button id="admin-enter" class="btn-submit">Entrar como Admin</button>
+                </div>
+            </div>
+            <div id="role-error" class="role-error" aria-live="polite"></div>
+        </div>
+    </div>
+    
+    <!-- Confirmation modal for admin actions -->
+    <div id="confirm-modal" class="confirm-modal" style="display:none;">
+        <div class="confirm-card">
+            <h4 id="confirm-title">Confirmar acción</h4>
+            <p id="confirm-message">¿Estás seguro?</p>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button id="confirm-cancel" class="btn-action">Cancelar</button>
+                <button id="confirm-ok" class="btn-submit">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    <script src="index.js"></script>
 </body>
-</html># proyecto_final_proyectos
+</html>
