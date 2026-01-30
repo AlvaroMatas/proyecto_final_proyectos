@@ -20,6 +20,17 @@
   </header>
 
   <main class="reports-main">
+    <section id="charts" class="reports-card">
+      <h3>Gráficos</h3>
+      <div class="reports-charts">
+        <div class="chart-card">
+          <canvas id="chart-priority"></canvas>
+        </div>
+        <div class="chart-card">
+          <canvas id="chart-status"></canvas>
+        </div>
+      </div>
+    </section>
     <section id="summary" class="reports-card">
       <h3>Resumen</h3>
       <div id="summary-content" class="reports-summary">Cargando...</div>
@@ -31,6 +42,8 @@
     </section>
   </main>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Seguridad simple: sólo admin puede ver esta página
     try{
@@ -112,6 +125,39 @@
     }
 
     function escapeHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Charts initialization
+    (function renderCharts(){
+      try {
+  const ctxP = document.getElementById('chart-priority');
+  const ctxS = document.getElementById('chart-status');
+
+        // Priority doughnut
+        if (ctxP) {
+          const priorities = ['critical','high','medium','low'];
+          const dataP = priorities.map(k => byPriority[k] || 0);
+          new Chart(ctxP.getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: ['Crítica','Alta','Media','Baja'], datasets: [{ data: dataP, backgroundColor:['#e74c3c','#f39c12','#3498db','#2ecc71'] }] },
+            options: { responsive:true, plugins: { legend:{position:'bottom'} } }
+          });
+        }
+
+        // Status bar
+        if (ctxS) {
+          const statusCounts = { Abierto: tickets.filter(t=>t.status!=='Solucionado').length, Solucionado: tickets.filter(t=>t.status==='Solucionado').length };
+          new Chart(ctxS.getContext('2d'), {
+            type: 'bar',
+            data: { labels: ['Abiertas','Solucionadas'], datasets: [{ label:'Tickets', data:[statusCounts.Abierto, statusCounts.Solucionado], backgroundColor:['#2d7cc8','#2ecc71'] }] },
+            options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, precision:0 } } }
+          });
+        }
+
+        // Trend: tickets per day for last 14 days
+          // trend chart removed per request (kept priority and status charts only)
+
+      } catch(e) { console.warn('Charts error', e); }
+    })();
   </script>
 </body>
 </html>
