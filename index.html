@@ -22,6 +22,7 @@
         <div class="nav-links">
             <a href="#" class="menu-item active" id="nav-dashboard"><span class="icon">📋</span> Tablero</a>
             <a href="#" class="menu-item btn-new-ticket" id="nav-new-ticket"><span class="icon">＋</span> Nueva incidencia</a>
+            <a href="#" class="menu-item" id="nav-help"><span class="icon">🛠️</span> Ayuda rápida</a>
         </div>
 
         <div class="sidebar-search">
@@ -41,6 +42,11 @@
                 <a href="reportes.html" class="menu-item" id="nav-reports"><span class="icon">📈</span> Reportes</a>
                 <a href="#" class="menu-item logout" id="btn-logout">Cerrar sesión</a>
             </div>
+        </div>
+        <!-- Profile menu (hidden by default) -->
+        <div id="profile-menu" class="profile-menu" style="display:none;">
+            <button id="profile-switch" class="btn-action">Cambiar usuario</button>
+            <button id="profile-logout" class="btn-action">Cerrar sesión</button>
         </div>
     </nav>
 
@@ -108,9 +114,132 @@
                         * El tiempo de respuesta se calcula automáticamente según la prioridad.
                     </small>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">Adjuntar archivos</label>
+                    <input type="file" id="attachment-input" class="form-input" multiple accept="image/*,.pdf" />
+                    <div id="attachment-preview" style="margin-top:8px; font-size:0.9rem; color:#333;"></div>
+                </div>
+
                 <button type="submit" class="btn-submit">Crear Ticket</button>
             </form>
         </section>
+
+                <section id="view-help" class="section-view">
+                        <div class="header"><h2>Guía rápida — Problemas comunes</h2></div>
+                        <div class="help-panel">
+                                <p class="help-intro">Aquí tienes soluciones rápidas y acciones recomendadas. Expande cada sección para ver los pasos y usa "Crear ticket" para registrar el problema automáticamente.</p>
+
+                                <details class="help-item">
+                                    <summary>No hay conexión a Internet</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Comprueba si otros compañeros tienen Internet. Si todos están afectados, reinicia el router/modem (espera 30s).</li>
+                                            <li>Si sólo tu equipo, desconecta/activa el Wi‑Fi y vuelve a conectarte; prueba cable Ethernet si es posible.</li>
+                                            <li>Reinicia el equipo si persiste. Anota hora y cualquier mensaje de error para el soporte.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="No hay conexión a Internet" data-desc="No hay acceso a Internet en mi puesto. He probado reiniciar el router y reconectar sin éxito.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Impresora no imprime</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Comprueba que la impresora está encendida y no tiene errores (atascos, falta de papel/tóner).</li>
+                                            <li>En el PC, revisa la cola de impresión y cancela trabajos atascados.</li>
+                                            <li>Reinicia la impresora y el equipo; si es en red, verifica que la impresora tenga dirección IP y responde al ping.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Impresora no imprime" data-desc="La impresora no ejecuta trabajos. He comprobado papel y cola de impresión.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>No puedo acceder al correo</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Verifica tu contraseña y mayúsculas. Intenta acceder via webmail para descartar cliente local.</li>
+                                            <li>Si recibes error de autenticación, intenta restablecer la contraseña o contacta con administración.</li>
+                                            <li>Si el correo carga muy lento, comprueba la conexión a Internet y el espacio en la bandeja.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="No puedo acceder al correo" data-desc="Error al intentar acceder al correo. He probado webmail y cliente local.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Ordenador muy lento</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Cierra aplicaciones que no uses y reinicia el equipo.</li>
+                                            <li>Revisa el espacio en disco y borra archivos temporales o descargas innecesarias.</li>
+                                            <li>Si el problema persiste, anota los procesos que consumen CPU/memoria para que el soporte lo analice.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Ordenador muy lento" data-desc="El equipo está muy lento incluso con pocas apps abiertas.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Olvidé mi contraseña</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Prueba la opción de "Olvidé mi contraseña" en el servicio correspondiente (correo, sistemas internos).</li>
+                                            <li>Si no hay opción, solicita un restablecimiento a soporte o a la administración indicando tu usuario y DNI.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Olvidé mi contraseña" data-desc="Solicito restablecer mi contraseña de usuario.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Aplicación se cierra o da error</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Anota el mensaje de error exacto y la acción que realizabas.</li>
+                                            <li>Reinicia la aplicación; si es posible, prueba con otra cuenta para aislar si es problema de usuario.</li>
+                                            <li>Si ocurre repetidamente, exporta registros o capturas y envíalos al soporte.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Aplicación falla" data-desc="La aplicación X se cierra con error. Adjunto detalles.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Pantalla en negro o sin señal</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Comprueba conexiones del cable de video y alimentación del monitor.</li>
+                                            <li>Prueba otro monitor o cable si está disponible.</li>
+                                            <li>Reinicia el equipo; si no arranca, anota los pitidos del BIOS para soporte técnico.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Pantalla sin señal" data-desc="Monitor sin señal después de encender equipo.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Teléfono fijo / VOIP no funciona</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Reinicia el teléfono (si tiene alimentación separada) o desconecta/reconecta el cable de red.</li>
+                                            <li>Verifica la configuración de la línea en la app de administración si tienes acceso.</li>
+                                            <li>Contacta al proveedor si hay caída general.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="Teléfono VOIP no funciona" data-desc="No hay tono en el teléfono de la oficina.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <details class="help-item">
+                                    <summary>Problemas con VPN</summary>
+                                    <div class="help-body">
+                                        <ol>
+                                            <li>Verifica credenciales y que el cliente VPN está actualizado.</li>
+                                            <li>Prueba reiniciar el cliente VPN y la conexión a Internet local.</li>
+                                            <li>Si falla, recopila logs del cliente VPN y envíalos al equipo de soporte.</li>
+                                        </ol>
+                                        <div class="help-actions"><button class="help-create-ticket" data-subject="VPN no conecta" data-desc="No puedo establecer conexión VPN desde mi puesto.">Crear ticket</button></div>
+                                    </div>
+                                </details>
+
+                                <p class="help-note">Si después de seguir estos pasos no consigues resolver el problema, abre un ticket detallando los pasos realizados y adjunta capturas o logs si es posible.</p>
+                        </div>
+                </section>
 
     </main>
     
@@ -121,9 +250,11 @@
             <div class="roles">
                 <div class="role-option" id="role-trabajador">
                     <h4>Trabajador</h4>
-                    <p>Reporta incidencias. Accedes introduciendo tu nombre.</p>
+                    <p>Reporta incidencias. Accede o regístrate con nombre y contraseña.</p>
                     <input type="text" id="worker-name-input" placeholder="Tu nombre" />
-                    <button id="worker-enter" class="btn-submit">Entrar como Trabajador</button>
+                    <input type="password" id="worker-pass-input" placeholder="Contraseña (opcional)" />
+                    <label style="display:block; margin:6px 0; font-size:0.9rem;"><input type="checkbox" id="worker-remember" /> Recordarme</label>
+                    <button id="worker-enter" class="btn-submit">Entrar / Registrar</button>
                 </div>
 
                 <div class="role-option" id="role-admin">
@@ -145,6 +276,18 @@
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
                 <button id="confirm-cancel" class="btn-action">Cancelar</button>
                 <button id="confirm-ok" class="btn-submit">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- integration UI removed -->
+    <!-- Ticket detail modal (attachments viewer) -->
+    <div id="ticket-detail-modal" class="confirm-modal" style="display:none;">
+        <div class="confirm-card detail-card">
+            <h4 id="detail-title">Detalle del ticket</h4>
+            <div id="ticket-detail-content" style="margin-top:8px;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                <button id="detail-close" class="btn-action">Cerrar</button>
             </div>
         </div>
     </div>

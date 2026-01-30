@@ -250,6 +250,46 @@
 .btn-action { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; background: white; cursor: pointer; }
 .btn-action:hover { background: #f2f2f2; }
 
+/* Attachment previews */
+.attachment-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.attachment-item { display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fafafa; border:1px solid #eee; }
+.attachment-item img { max-width:48px; max-height:48px; object-fit:cover; border-radius:6px; }
+.attachment-item .att-name { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.9rem; }
+
+/* Charts (reportes) */
+.reports-charts { display:flex; gap:18px; flex-wrap:wrap; margin-top:12px; }
+.chart-card { background:white; padding:12px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.06); flex:1 1 320px; }
+.chart-card canvas { width:100% !important; height:260px !important; }
+
+/* Profile menu */
+.profile-menu { position: absolute; left: 20px; bottom: 84px; display:flex; flex-direction:column; gap:8px; padding:10px; background:#fff; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:50; }
+.profile-menu .btn-action { width: 100%; text-align:left; }
+.sidebar .profile { cursor: pointer; }
+
+/* Ticket detail modal styles */
+.detail-card { max-width:760px; width:90%; }
+.detail-card .attachments { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.detail-card .attachments .att { background:#fafafa; border:1px solid #eee; padding:8px; border-radius:8px; display:flex; gap:8px; align-items:center; }
+.detail-card .attachments img { max-width:96px; max-height:96px; object-fit:cover; border-radius:6px; }
+.detail-card .att .att-meta { display:flex; flex-direction:column; gap:4px; max-width:420px; }
+.detail-card .att a.download { color: #2d7cc8; text-decoration: none; font-weight:600; }
+
+/* Help panel styles */
+.help-panel { background: #fff; padding: 18px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); }
+.help-intro { color:#555; margin-bottom:12px; }
+.help-item { border:1px solid #eee; border-radius:8px; margin-bottom:10px; overflow:hidden; }
+.help-item summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; font-weight:700; background:linear-gradient(180deg,#fbfdff,#f7fbff); }
+.help-item[open] summary { background: linear-gradient(180deg,#eef6ff,#f7fbff); }
+.help-item summary::-webkit-details-marker { display:none; }
+.help-item summary::after { content: '▾'; transition: transform .18s ease; }
+.help-item[open] summary::after { transform: rotate(180deg); }
+.help-body { padding:12px 14px 16px 14px; color:#444; background: #fff; }
+.help-body ol { margin:0 0 8px 20px; }
+.help-actions { margin-top:8px; }
+.help-create-ticket { background: #2d7cc8; color: white; border: none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.help-create-ticket:hover { background:#2467ab; }
+.help-note { margin-top:12px; color:#666; }
+
 /* Confirmation modal */
 .confirm-modal {
     position: fixed;

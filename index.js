@@ -13,8 +13,10 @@ let currentUser = { role: null, name: null, isAdmin: false };
 // 2. DOM Elements
 const navDashboard = document.getElementById('nav-dashboard');
 const navNewTicket = document.getElementById('nav-new-ticket');
+const navHelp = document.getElementById('nav-help');
 const viewDashboard = document.getElementById('view-dashboard');
 const viewNewTicket = document.getElementById('view-new-ticket');
+const viewHelp = document.getElementById('view-help');
 const ticketForm = document.getElementById('create-ticket-form');
 const ticketListBody = document.getElementById('ticket-list-body');
 const ticketCountSpan = document.getElementById('ticket-count');
@@ -23,6 +25,11 @@ const filterSelect = document.getElementById('filter-select');
 // Search input inside the sidebar
 const searchInput = document.querySelector('.sidebar-search input');
 let searchQuery = '';
+
+// Attachments inputs (created in the form)
+const attachmentInput = document.getElementById('attachment-input');
+const attachmentPreview = document.getElementById('attachment-preview');
+let attachmentsTemp = []; // [{name,type,data}] while composing a ticket
 
 // Confirm modal elements
 const confirmModal = document.getElementById('confirm-modal');
@@ -34,6 +41,9 @@ let pendingConfirmId = null;
 
 const profileNameEl = document.getElementById('profile-name');
 const profileRoleEl = document.getElementById('profile-role');
+const profileMenuEl = document.getElementById('profile-menu');
+const profileSwitchBtn = document.getElementById('profile-switch');
+const profileLogoutBtn = document.getElementById('profile-logout');
 
 // Theme toggle button element (in header)
 const themeToggleBtn = document.getElementById('btn-theme-toggle');
@@ -62,6 +72,19 @@ function loadState() {
     if (u) currentUser = JSON.parse(u);
 }
 
+// Ensure older tickets have alert flags to avoid repeated notifications
+function normalizeLoadedTickets() {
+    tickets = tickets.map(t => ({ alertedOverdue: false, alertedWarning: false, ...t }));
+}
+
+// --- n8n Webhook configuration (can be set via the Integration modal or localStorage)
+// Example webhook URL: 'https://your-n8n-host/webhook/ticket-webhook'
+// n8n integration removed: integration UI & webhook config were removed per user request
+
+// Integration UI removed
+
+// ...existing navigation code...
+
 // 3. Navigation
 function switchView(viewName) {
     if (viewName === 'dashboard') {
@@ -70,6 +93,13 @@ function switchView(viewName) {
         navDashboard.classList.add('active');
         navNewTicket.classList.remove('active');
         renderTicketList();
+    } else if (viewName === 'help') {
+        viewDashboard.classList.remove('active-section');
+        viewNewTicket.classList.remove('active-section');
+        viewHelp.classList.add('active-section');
+        navDashboard.classList.remove('active');
+        navNewTicket.classList.remove('active');
+        if (navHelp) navHelp.classList.add('active');
     } else if (viewName === 'new') {
         viewDashboard.classList.remove('active-section');
         viewNewTicket.classList.add('active-section');
@@ -80,13 +110,14 @@ function switchView(viewName) {
 
 navDashboard.addEventListener('click', (e) => { e.preventDefault(); switchView('dashboard'); });
 navNewTicket.addEventListener('click', (e) => { e.preventDefault(); switchView('new'); });
+if (navHelp) navHelp.addEventListener('click', (e) => { e.preventDefault(); switchView('help'); });
 
 // Logout handling (clear current user and show role overlay)
 if (btnLogout) {
     btnLogout.addEventListener('click', (e) => {
         e.preventDefault();
-        currentUser = { role: null, name: null, isAdmin: false };
-        saveState();
+    currentUser = { role: null, name: null, isAdmin: false };
+    saveState();
         showOverlay();
         // default to dashboard hidden
         switchView('dashboard');
@@ -125,6 +156,64 @@ if (searchInput) {
         }
     });
 }
+
+// Attachment handling: read selected files into attachmentsTemp and show previews
+function renderAttachmentPreview() {
+    if (!attachmentPreview) return;
+    attachmentPreview.innerHTML = '';
+    if (!attachmentsTemp || attachmentsTemp.length === 0) return;
+    const list = document.createElement('div');
+    list.className = 'attachment-list';
+    attachmentsTemp.forEach(att => {
+        const it = document.createElement('div');
+        it.className = 'attachment-item';
+        const thumb = document.createElement('img');
+        // show image thumb or generic icon
+        if (att.type && att.type.startsWith('image/')) thumb.src = att.data;
+        else thumb.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%23e8e8e8"/><text x="24" y="28" font-size="12" text-anchor="middle" fill="%23666">PDF</text></svg>';
+        const name = document.createElement('div');
+        name.className = 'att-name';
+        name.textContent = att.name;
+        it.appendChild(thumb);
+        it.appendChild(name);
+        list.appendChild(it);
+    });
+    attachmentPreview.appendChild(list);
+}
+
+if (attachmentInput) {
+    attachmentInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) { attachmentsTemp = []; renderAttachmentPreview(); return; }
+        // read files as data URLs
+        const readers = files.map(f => new Promise((res) => {
+            const r = new FileReader();
+            r.onload = () => res({ name: f.name, type: f.type, data: r.result });
+            r.onerror = () => res(null);
+            r.readAsDataURL(f);
+        }));
+        const results = await Promise.all(readers);
+        attachmentsTemp = results.filter(Boolean);
+        renderAttachmentPreview();
+    });
+}
+
+// Help -> create ticket prefill handler
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.help-create-ticket');
+    if (!btn) return;
+    e.preventDefault();
+    const subject = btn.getAttribute('data-subject') || '';
+    const desc = btn.getAttribute('data-desc') || '';
+    // prefill form
+    const subjEl = document.getElementById('subject');
+    const descEl = document.getElementById('description');
+    if (subjEl) subjEl.value = subject;
+    if (descEl) descEl.value = desc;
+    // switch to new ticket view and focus
+    switchView('new');
+    setTimeout(() => { subjEl && subjEl.focus(); }, 80);
+});
 
 // 4. Role handling (overlay)
 function showOverlay() { roleOverlay.style.display = 'flex'; }
@@ -189,16 +278,19 @@ ticketForm.addEventListener('submit', function (e) {
         status: 'Abierto',
         createdAt: now,
         slaDeadline: deadline,
-        reporter
+        reporter,
+        attachments: attachmentsTemp.slice()
     };
 
     tickets.push(newTicket);
     saveState();
-
     // Show success message
     showTemporaryMessage('Incidencia mandada correctamente.', 'success');
 
     ticketForm.reset();
+    // clear attachment buffer and preview
+    attachmentsTemp = [];
+    if (attachmentPreview) attachmentPreview.innerHTML = '';
     // After sending, show dashboard (if admin) or show confirmation then dashboard
     switchView('dashboard');
 });
@@ -264,18 +356,19 @@ function renderTicketList() {
         // Status visual
         const statusLabel = ticket.status === 'Solucionado' ? `<span style="color: var(--success); font-weight:700">${ticket.status}</span>` : ticket.status;
 
-        // Actions: if admin show button to toggle solved
+        // Actions: if admin show button to toggle solved and view attachments
         let actionsHtml = '';
         if (currentUser && currentUser.isAdmin) {
             const btnText = ticket.status === 'Solucionado' ? 'Marcar Abierto' : 'Marcar Solucionado';
-            actionsHtml = `<button class="btn-action" data-id="${ticket.id}">${btnText}</button>`;
+            const viewAtt = (ticket.attachments && ticket.attachments.length) ? `<button class="btn-action btn-attach" data-id="${ticket.id}">Adjuntos (${ticket.attachments.length})</button>` : '';
+            actionsHtml = `${viewAtt} <button class="btn-action" data-id="${ticket.id}">${btnText}</button>`;
         } else {
             actionsHtml = '-';
         }
 
         row.innerHTML = `
             <td><strong>${ticket.id}</strong></td>
-            <td>${escapeHtml(ticket.subject)}</td>
+            <td>${escapeHtml(ticket.subject)} ${ticket.attachments && ticket.attachments.length ? `<span title="${ticket.attachments.length} adjunto(s)">📎 ${ticket.attachments.length}</span>` : ''}</td>
             <td><span class="badge ${badgeClass}">${priorityLabel}</span></td>
             <td>${statusLabel}</td>
             <td>${escapeHtml(ticket.reporter || '')}</td>
@@ -289,11 +382,21 @@ function renderTicketList() {
         ticketListBody.appendChild(row);
     });
 
-    // Attach action listeners for admin buttons (confirm before toggling)
+    // toggle / mark solved buttons
     document.querySelectorAll('.btn-action').forEach(btn => {
+        // skip attach buttons here
+        if (btn.classList.contains('btn-attach')) return;
         btn.addEventListener('click', (e) => {
             const id = e.currentTarget.getAttribute('data-id');
             promptConfirmToggle(id);
+        });
+    });
+
+    // attach view attachments handlers
+    document.querySelectorAll('.btn-attach').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            showTicketDetail(id);
         });
     });
 }
@@ -305,6 +408,44 @@ function toggleTicketSolved(id) {
     saveState();
     renderTicketList();
 }
+
+// Ticket detail modal: show attachments and info for admins
+const ticketDetailModal = document.getElementById('ticket-detail-modal');
+const ticketDetailContent = document.getElementById('ticket-detail-content');
+const detailClose = document.getElementById('detail-close');
+
+function showTicketDetail(id) {
+    const t = tickets.find(x => x.id === id);
+    if (!t || !ticketDetailModal || !ticketDetailContent) return;
+    // build content
+    const created = new Date(t.createdAt).toLocaleString();
+    const deadline = new Date(t.slaDeadline).toLocaleString();
+    let html = `<div><strong>${escapeHtml(t.subject)}</strong><div style="color:#666; font-size:0.95rem; margin-top:6px;">${escapeHtml(t.description)}</div>`;
+    html += `<div style="margin-top:10px; font-size:0.9rem; color:#444;"><strong>Reportado por:</strong> ${escapeHtml(t.reporter||'')} • <strong>Prioridad:</strong> ${t.priority} • <strong>Estado:</strong> ${t.status}</div>`;
+    html += `<div style="margin-top:6px; color:#666; font-size:0.9rem;"><strong>Creado:</strong> ${created} • <strong>Deadline:</strong> ${deadline}</div>`;
+
+    // attachments
+    if (t.attachments && t.attachments.length) {
+        html += `<div class="attachments">`;
+        t.attachments.forEach((a, idx) => {
+            const safeName = escapeHtml(a.name || (`adjunto-${idx+1}`));
+            const isImage = a.type && a.type.startsWith('image/');
+            const thumb = isImage ? `<img src="${a.data}" alt="${safeName}" />` : `<div style="width:96px;height:64px;display:flex;align-items:center;justify-content:center;background:#f4f4f4;border-radius:6px;color:#666;">${safeName.split('.').pop().toUpperCase()}</div>`;
+            html += `<div class="att">${thumb}<div class="att-meta"><div class="att-name">${safeName}</div><div style="font-size:0.85rem; color:#666;">${a.type || 'application/octet-stream'}</div><div><a class="download" href="${a.data}" download="${safeName}">Descargar</a> <span style="color:#999">•</span> <a target="_blank" rel="noopener noreferrer" href="${a.data}">Abrir</a></div></div></div>`;
+        });
+        html += `</div>`;
+    } else {
+        html += `<div style="margin-top:10px; color:#666;">No hay archivos adjuntos.</div>`;
+    }
+
+    html += `</div>`;
+    ticketDetailContent.innerHTML = html;
+    ticketDetailModal.style.display = 'flex';
+}
+
+if (detailClose) detailClose.addEventListener('click', (e) => { e.preventDefault(); if (ticketDetailModal) ticketDetailModal.style.display = 'none'; });
+// also allow clicking outside to close
+if (ticketDetailModal) ticketDetailModal.addEventListener('click', (e) => { if (e.target === ticketDetailModal) ticketDetailModal.style.display = 'none'; });
 
 // Confirmation modal flow
 function promptConfirmToggle(id) {
@@ -350,6 +491,7 @@ function initDemoDataIfEmpty() {
 
 // Load stored state and initialize
 loadState();
+normalizeLoadedTickets();
 initDemoDataIfEmpty();
 
 /* --- THEME (Dark Mode) --- */
@@ -389,6 +531,64 @@ loadTheme();
 
 // Update profile display on load
 updateProfileDisplay();
+
+// Profile menu behavior: toggle on profile click, and actions for change user / logout
+const profileContainer = document.querySelector('.sidebar .profile');
+if (profileContainer) {
+    profileContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!profileMenuEl) return;
+        profileMenuEl.style.display = (profileMenuEl.style.display === 'flex') ? 'none' : 'flex';
+    });
+}
+
+// Hide profile menu when clicking elsewhere
+document.addEventListener('click', () => { if (profileMenuEl) profileMenuEl.style.display = 'none'; });
+
+if (profileSwitchBtn) profileSwitchBtn.addEventListener('click', (e) => { e.preventDefault(); if (profileMenuEl) profileMenuEl.style.display = 'none'; showOverlay(); });
+if (profileLogoutBtn) profileLogoutBtn.addEventListener('click', (e) => { e.preventDefault(); if (btnLogout) btnLogout.click(); if (profileMenuEl) profileMenuEl.style.display = 'none'; });
+
+// SLA notifications: warn when <2h left, alert when overdue. Persist simple alert flags to avoid repeated spam.
+function requestNotificationPermissionIfNeeded() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        try { Notification.requestPermission(); } catch (e) { /* ignore */ }
+    }
+}
+
+function checkSLAAlerts() {
+    const now = new Date();
+    let changed = false;
+    tickets.forEach(t => {
+        if (!t || t.status === 'Solucionado') return;
+        const ms = new Date(t.slaDeadline) - now;
+        // overdue
+        if (ms < 0 && !t.alertedOverdue) {
+            showTemporaryMessage(`Ticket ${t.id} vencido. Prioridad: ${t.priority}`, 'info');
+            try {
+                if (Notification && Notification.permission === 'granted') {
+                    new Notification('Ticket vencido', { body: `${t.id} - ${t.subject}` });
+                }
+            } catch (e) {}
+            t.alertedOverdue = true; changed = true;
+        } else if (ms > 0 && ms <= (2 * 60 * 60 * 1000) && !t.alertedWarning) {
+            showTemporaryMessage(`Ticket ${t.id} cerca del SLA (${t.priority}). Quedan <2h.`, 'info');
+            try {
+                if (Notification && Notification.permission === 'granted') {
+                    new Notification('SLA próxima', { body: `${t.id} - ${t.subject}` });
+                }
+            } catch (e) {}
+            t.alertedWarning = true; changed = true;
+        }
+    });
+    if (changed) saveState();
+}
+
+// Ask permission proactively when the app starts (non-intrusive)
+requestNotificationPermissionIfNeeded();
+// Run once now and then every minute
+setTimeout(checkSLAAlerts, 2000);
+setInterval(checkSLAAlerts, 60 * 1000);
 
 // If user already selected, skip overlay
 if (currentUser && currentUser.role) {
