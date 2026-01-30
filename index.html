@@ -130,6 +130,17 @@
                         <div class="help-panel">
                                 <p class="help-intro">Aquí tienes soluciones rápidas y acciones recomendadas. Expande cada sección para ver los pasos y usa "Crear ticket" para registrar el problema automáticamente.</p>
 
+                                        <!-- Asistente IA simple (cliente-side) -->
+                                        <div class="faq-assistant" aria-live="polite">
+                                            <h3>Asistente (IA)</h3>
+                                            <div id="assistant-convo" class="assistant-convo" role="log"></div>
+                                            <div class="assistant-input">
+                                                <input type="text" id="assistant-input" placeholder="Escribe tu pregunta, p.ej. 'No puedo imprimir'" aria-label="Pregunta al asistente" />
+                                                <button id="assistant-send" class="btn-action">Enviar</button>
+                                            </div>
+                                            <div id="assistant-suggest" class="assistant-suggest" aria-hidden="true"></div>
+                                        </div>
+
                                 <details class="help-item">
                                     <summary>No hay conexión a Internet</summary>
                                     <div class="help-body">

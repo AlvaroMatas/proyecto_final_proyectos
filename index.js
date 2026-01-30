@@ -603,3 +603,88 @@ renderTicketList();
 
 // Update SLA timers every minute
 setInterval(renderTicketList, 60000);
+
+/* --- FAQ Assistant (simple client-side 'IA') --- */
+// Knowledge base: short answers and keywords
+const FAQ_KB = [
+    { keywords: ['internet','conexion','conexión','router','wifi'], answer: 'Prueba reiniciar el router/modem, desconectar y volver a conectar el Wi‑Fi, y si es general reinicia el equipo. Si sigue sin funcionar, crea un ticket con los pasos que has probado.' },
+    { keywords: ['impresora','imprime','impresión','cola'], answer: 'Comprueba que la impresora esté encendida, papel/tóner y revisa la cola de impresión en el equipo. Reinicia la impresora y el PC. Si persiste, abre un ticket indicando modelo y mensajes de error.' },
+    { keywords: ['correo','email','mail','webmail'], answer: 'Intenta entrar por webmail para descartar cliente local. Revisa usuario/contraseña y restablece si es necesario. Si falla, crea un ticket indicando el error exacto.' },
+    { keywords: ['lento','lentitud','velocidad','cpu','memoria'], answer: 'Cierra aplicaciones innecesarias, revisa procesos que consumen CPU/memoria y libera espacio en disco. Si no mejora, abre un ticket con observaciones y capturas.' },
+    { keywords: ['contraseña','clave','olvidé','restablecer'], answer: 'Usa la opción de restablecer contraseña del servicio. Si no existe, solicita el restablecimiento via ticket indicando tu usuario y DNI.' },
+    { keywords: ['aplicación','app','error','se cierra','crash'], answer: 'Anota el mensaje de error y pasos para reproducirlo. Reinicia la app y, si persiste, adjunta capturas o logs en un ticket.' },
+    { keywords: ['pantalla','monitor','negro','sin señal'], answer: 'Revisa cables de vídeo y alimentación, prueba otro cable/monitor y anota pitidos BIOS si no arranca. Si no se soluciona, registra un ticket.' },
+    { keywords: ['vpn','conexión vpn','vpn no conecta'], answer: 'Verifica credenciales y versión del cliente VPN, reinicia el cliente y la conexión. Si sigue fallando, adjunta logs del cliente en un ticket.' },
+    { keywords: ['telefono','voip','fono','teléfono'], answer: 'Reinicia el teléfono, revisa cables y configuración de red. Si hay caída general, crea un ticket indicando la extensión y síntoma.' }
+];
+
+function appendAssistantBubble(text, from = 'bot'){
+    const convo = document.getElementById('assistant-convo');
+    if(!convo) return;
+    const div = document.createElement('div');
+    div.className = 'assistant-bubble ' + (from === 'user' ? 'user' : 'bot');
+    div.textContent = text;
+    convo.appendChild(div);
+    convo.scrollTop = convo.scrollHeight;
+}
+
+function findAnswerFor(question){
+    const q = (question||'').toLowerCase();
+    for(const item of FAQ_KB){
+        for(const kw of item.keywords){
+            if(q.includes(kw)) return item.answer;
+        }
+    }
+    return null;
+}
+
+// Wire assistant UI
+const assistantInput = document.getElementById('assistant-input');
+const assistantSend = document.getElementById('assistant-send');
+const assistantSuggest = document.getElementById('assistant-suggest');
+
+function assistantHandleSend(){
+    const q = assistantInput && assistantInput.value && assistantInput.value.trim();
+    if(!q) return;
+    appendAssistantBubble(q, 'user');
+    if(assistantInput) assistantInput.value = '';
+    appendAssistantBubble('Analizando tu pregunta...', 'bot');
+    setTimeout(()=>{
+        // remove the 'analizando' last bot bubble
+        const convo = document.getElementById('assistant-convo');
+        if(convo){
+            const nodes = convo.querySelectorAll('.assistant-bubble.bot');
+            if(nodes && nodes.length) nodes[nodes.length-1].remove();
+        }
+        const ans = findAnswerFor(q);
+        if(ans){
+            appendAssistantBubble(ans, 'bot');
+            // offer quick actions
+            if(assistantSuggest) assistantSuggest.innerHTML = `<div>¿Quieres registrar un ticket sobre esto? <button class="btn-action assistant-create-ticket" data-subject="${escapeHtml(q).slice(0,80)}" data-desc="${escapeHtml(q)}">Crear ticket</button></div>`;
+        } else {
+            appendAssistantBubble('No tengo una respuesta exacta. Puedo abrir un ticket con tu consulta para que el equipo lo revise.', 'bot');
+            if(assistantSuggest) assistantSuggest.innerHTML = `<div>¿Registrar un ticket? <button class="btn-action assistant-create-ticket" data-subject="${escapeHtml(q).slice(0,80)}" data-desc="${escapeHtml(q)}">Crear ticket</button></div>`;
+        }
+    }, 700);
+}
+
+if (assistantSend) assistantSend.addEventListener('click', (e)=>{ e.preventDefault(); assistantHandleSend(); });
+if (assistantInput) assistantInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); assistantHandleSend(); } });
+
+// Create ticket from assistant suggestions
+document.addEventListener('click', (e)=>{
+    const a = e.target.closest && e.target.closest('.assistant-create-ticket');
+    if(!a) return;
+    e.preventDefault();
+    const subject = a.getAttribute('data-subject') || '';
+    const desc = a.getAttribute('data-desc') || '';
+    const subjEl = document.getElementById('subject');
+    const descEl = document.getElementById('description');
+    if(subjEl) subjEl.value = subject;
+    if(descEl) descEl.value = desc;
+    // clear suggestions
+    if(assistantSuggest) assistantSuggest.innerHTML = '';
+    // switch to new ticket view
+    switchView('new');
+    setTimeout(()=>{ subjEl && subjEl.focus(); }, 80);
+});
