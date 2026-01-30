@@ -326,3 +326,57 @@
 @media (max-width: 480px) {
     .logo-tavora { width: 88px; height: 88px; margin-bottom: 12px; }
 }
+
+/* Theme toggle button */
+.theme-toggle {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:8px;
+    border: 1px solid #ddd;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.theme-toggle:focus { outline: none; box-shadow: 0 0 0 4px rgba(52,152,219,0.12); }
+
+/* Dark mode overrides */
+body.dark {
+    background-color: #071121;
+    color: #dbe9f5;
+}
+
+body.dark .main-content {
+    /* slightly darker background behind cards */
+    background: transparent;
+}
+
+body.dark .section-view {
+    background: #0b1722;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+
+body.dark .header h2 { color: #e6f0f8; }
+
+body.dark .ticket-table th, body.dark .ticket-table td {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: #d2e6f6;
+}
+
+body.dark .form-input, body.dark .form-select, body.dark .form-textarea {
+    background: rgba(255,255,255,0.02);
+    color: #eaf4ff;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+body.dark .role-card, body.dark .confirm-card, body.dark .reports-card {
+    background: #071822;
+    color: #dbeaf6;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+body.dark .toast { background: #23343f; color: #e6f6ff; }
+
+body.dark .theme-toggle { border-color: rgba(255,255,255,0.06); }

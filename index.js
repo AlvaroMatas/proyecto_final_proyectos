@@ -20,6 +20,9 @@ const ticketListBody = document.getElementById('ticket-list-body');
 const ticketCountSpan = document.getElementById('ticket-count');
 const btnLogout = document.getElementById('btn-logout');
 const filterSelect = document.getElementById('filter-select');
+// Search input inside the sidebar
+const searchInput = document.querySelector('.sidebar-search input');
+let searchQuery = '';
 
 // Confirm modal elements
 const confirmModal = document.getElementById('confirm-modal');
@@ -31,6 +34,9 @@ let pendingConfirmId = null;
 
 const profileNameEl = document.getElementById('profile-name');
 const profileRoleEl = document.getElementById('profile-role');
+
+// Theme toggle button element (in header)
+const themeToggleBtn = document.getElementById('btn-theme-toggle');
 
 // Overlay elements
 const roleOverlay = document.getElementById('role-overlay');
@@ -91,6 +97,33 @@ if (btnLogout) {
 // Filter handling
 if (filterSelect) {
     filterSelect.addEventListener('change', () => renderTicketList());
+}
+
+// Debounce helper
+function debounce(fn, wait) {
+    let t;
+    return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
+// Search handling (live, debounced)
+if (searchInput) {
+    const onSearch = debounce((e) => {
+        searchQuery = (e.target.value || '').trim().toLowerCase();
+        renderTicketList();
+    }, 220);
+    searchInput.addEventListener('input', onSearch);
+    // allow Enter to focus dashboard table (small UX enhancement)
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            // Move focus to table body
+            const firstRow = document.querySelector('#ticket-list-body tr');
+            if (firstRow) firstRow.focus && firstRow.focus();
+        }
+    });
 }
 
 // 4. Role handling (overlay)
@@ -187,6 +220,16 @@ function renderTicketList() {
     let shown = tickets;
     if (filter === 'open') shown = tickets.filter(t => t.status !== 'Solucionado');
     else if (filter === 'solved') shown = tickets.filter(t => t.status === 'Solucionado');
+
+    // Apply search query (case-insensitive) across several ticket fields
+    if (searchQuery && String(searchQuery).length > 0) {
+        const q = searchQuery.toLowerCase();
+        shown = shown.filter(t => {
+            return [t.id, t.subject, t.description, t.reporter, t.priority, t.status]
+                .some(f => String(f || '').toLowerCase().includes(q));
+        });
+    }
+
     ticketCountSpan.textContent = shown.length;
 
     if (shown.length === 0) {
@@ -308,6 +351,41 @@ function initDemoDataIfEmpty() {
 // Load stored state and initialize
 loadState();
 initDemoDataIfEmpty();
+
+/* --- THEME (Dark Mode) --- */
+const THEME_KEY = 'theme';
+function applyTheme(theme) {
+    if (theme === 'dark') document.body.classList.add('dark');
+    else document.body.classList.remove('dark');
+    if (themeToggleBtn) {
+        const isDark = theme === 'dark';
+        themeToggleBtn.setAttribute('aria-pressed', isDark);
+        themeToggleBtn.textContent = isDark ? '☀︎' : '🌙';
+        themeToggleBtn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    }
+}
+
+function loadTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) { applyTheme(saved); return; }
+    // Respect user OS preference as fallback
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+}
+
+function toggleTheme() {
+    const isDarkNow = document.body.classList.toggle('dark');
+    const next = isDarkNow ? 'dark' : 'light';
+    localStorage.setItem(THEME_KEY, next);
+    if (themeToggleBtn) {
+        themeToggleBtn.setAttribute('aria-pressed', isDarkNow);
+        themeToggleBtn.textContent = isDarkNow ? '☀️' : '🌙';
+        themeToggleBtn.title = isDarkNow ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    }
+}
+
+if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+loadTheme();
 
 // Update profile display on load
 updateProfileDisplay();
