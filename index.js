@@ -74,8 +74,66 @@ function loadState() {
 
 // Ensure older tickets have alert flags to avoid repeated notifications
 function normalizeLoadedTickets() {
-    tickets = tickets.map(t => ({ alertedOverdue: false, alertedWarning: false, ...t }));
+    tickets = tickets.map(t => ({ alertedOverdue: false, alertedWarning: false, history: t.history || [], urgent: t.urgent || false, assignedTo: t.assignedTo || null, internalNotes: t.internalNotes || [], assetId: t.assetId || null, feedback: t.feedback || null, needsFeedback: t.needsFeedback || false, ...t }));
+    // convert history and internalNotes timestamps to Date
+    tickets = tickets.map(t => ({ ...t,
+        history: (t.history || []).map(h => ({ ...h, timestamp: h && h.timestamp ? new Date(h.timestamp) : new Date() })),
+        internalNotes: (t.internalNotes || []).map(n => ({ ...n, timestamp: n && n.timestamp ? new Date(n.timestamp) : new Date() }))
+    }));
 }
+
+// Notifications storage (global simple list)
+let notifications = [];
+function loadNotifications(){
+    const raw = localStorage.getItem('notifications');
+    if(!raw) { notifications = []; return; }
+    try { notifications = JSON.parse(raw).map(n => ({ ...n, createdAt: n.createdAt ? new Date(n.createdAt) : new Date() })); } catch(e){ notifications = []; }
+}
+function saveNotifications(){ localStorage.setItem('notifications', JSON.stringify(notifications)); }
+function pushNotification(to, ticketId, message){
+    const n = { id: 'n' + Date.now(), to: to || 'admin', ticketId, message, createdAt: new Date(), read: false };
+    notifications.unshift(n);
+    saveNotifications();
+    renderNotificationBadge();
+}
+function renderNotificationBadge(){
+    const bellCount = document.getElementById('notif-count');
+    if(!bellCount) return;
+    const unread = notifications.filter(n => !n.read && (currentUser && (currentUser.isAdmin ? n.to === 'admin' || n.to === currentUser.name : n.to === currentUser.name))).length;
+    if(unread > 0){ bellCount.style.display = 'inline-block'; bellCount.textContent = String(unread); }
+    else { bellCount.style.display = 'none'; }
+}
+function renderNotificationsDropdown(){
+    const dd = document.getElementById('notifications-dropdown');
+    if(!dd) return;
+    dd.innerHTML = '';
+    const list = notifications.filter(n => (currentUser && (currentUser.isAdmin ? n.to === 'admin' || n.to === currentUser.name : n.to === currentUser.name)));
+    if(list.length === 0){ dd.innerHTML = '<div style="padding:12px;color:#666">No hay notificaciones.</div>'; return; }
+    list.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'notif-item ' + (n.read ? '' : 'unread');
+        el.innerHTML = `<div style="font-weight:700">${escapeHtml(n.message)}</div><div style="font-size:0.85rem;color:#666">${new Date(n.createdAt).toLocaleString()}</div>`;
+        el.addEventListener('click', ()=>{
+            n.read = true; saveNotifications(); renderNotificationBadge(); // navigate to ticket detail if exists
+            const t = tickets.find(x => x.id === n.ticketId);
+            if(t) showTicketDetail(n.ticketId);
+        });
+        dd.appendChild(el);
+    });
+}
+
+// Technicians management (simple local list)
+let technicians = [];
+function loadTechnicians(){
+    const raw = localStorage.getItem('technicians');
+    if(!raw){ technicians = ['Carlos','Marta','Luis']; saveTechnicians(); return; }
+    try { technicians = JSON.parse(raw); } catch(e){ technicians = ['Carlos','Marta','Luis']; saveTechnicians(); }
+}
+function saveTechnicians(){ localStorage.setItem('technicians', JSON.stringify(technicians)); }
+function getTechnicianOptionsHtml(selected){
+    return technicians.map(t => `<option value="${escapeHtml(t)}" ${selected === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('');
+}
+
 
 // --- n8n Webhook configuration (can be set via the Integration modal or localStorage)
 // Example webhook URL: 'https://your-n8n-host/webhook/ticket-webhook'
@@ -273,17 +331,24 @@ ticketForm.addEventListener('submit', function (e) {
     const newTicket = {
         id: '#' + String(ticketCounter++).padStart(3, '0'),
         subject,
+        assetId: document.getElementById('asset-id') ? document.getElementById('asset-id').value.trim() : null,
         description,
         priority,
         status: 'Abierto',
         createdAt: now,
         slaDeadline: deadline,
         reporter,
-        attachments: attachmentsTemp.slice()
+        attachments: attachmentsTemp.slice(),
+        history: [{ status: 'Recibido', actor: reporter, timestamp: now, note: 'Ticket creado' }],
+        urgent: false,
+        needsFeedback: false,
+        feedback: null
     };
 
     tickets.push(newTicket);
     saveState();
+    // Notify admins of new ticket
+    pushNotification('admin', newTicket.id, `Nueva incidencia: ${newTicket.id} - ${newTicket.subject}`);
     // Show success message
     showTemporaryMessage('Incidencia mandada correctamente.', 'success');
 
@@ -291,8 +356,9 @@ ticketForm.addEventListener('submit', function (e) {
     // clear attachment buffer and preview
     attachmentsTemp = [];
     if (attachmentPreview) attachmentPreview.innerHTML = '';
-    // After sending, show dashboard (if admin) or show confirmation then dashboard
+    // After sending, show dashboard
     switchView('dashboard');
+    renderTicketList();
 });
 
 // Temporary message helper
@@ -325,7 +391,7 @@ function renderTicketList() {
     ticketCountSpan.textContent = shown.length;
 
     if (shown.length === 0) {
-        ticketListBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: gray;">No hay tickets por el momento.</td></tr>';
+        ticketListBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: gray;">No hay tickets por el momento.</td></tr>';
         return;
     }
 
@@ -368,6 +434,7 @@ function renderTicketList() {
 
         row.innerHTML = `
             <td><strong>${ticket.id}</strong></td>
+            <td>${escapeHtml(ticket.assetId || '')}</td>
             <td>${escapeHtml(ticket.subject)} ${ticket.attachments && ticket.attachments.length ? `<span title="${ticket.attachments.length} adjunto(s)">📎 ${ticket.attachments.length}</span>` : ''}</td>
             <td><span class="badge ${badgeClass}">${priorityLabel}</span></td>
             <td>${statusLabel}</td>
@@ -404,9 +471,20 @@ function renderTicketList() {
 function toggleTicketSolved(id) {
     const t = tickets.find(x => x.id === id);
     if (!t) return;
+    const prev = t.status;
     t.status = (t.status === 'Solucionado') ? 'Abierto' : 'Solucionado';
+    // append history entry
+    t.history = t.history || [];
+    t.history.push({ status: t.status, actor: currentUser && currentUser.name ? currentUser.name : 'Sistema', timestamp: new Date(), note: `Estado cambiado desde ${prev}` });
+    // If now solved, request feedback from reporter
+    if (t.status === 'Solucionado') {
+        t.needsFeedback = true;
+        t.history.push({ status: 'Feedback solicitado', actor: 'Sistema', timestamp: new Date(), note: 'Se solicita valoración al cerrar la incidencia' });
+    }
     saveState();
     renderTicketList();
+    // notify reporter
+    pushNotification(t.reporter || 'user', t.id, `El estado de ${t.id} ha cambiado a ${t.status}`);
 }
 
 // Ticket detail modal: show attachments and info for admins
@@ -417,7 +495,7 @@ const detailClose = document.getElementById('detail-close');
 function showTicketDetail(id) {
     const t = tickets.find(x => x.id === id);
     if (!t || !ticketDetailModal || !ticketDetailContent) return;
-    // build content
+    // build content with timeline
     const created = new Date(t.createdAt).toLocaleString();
     const deadline = new Date(t.slaDeadline).toLocaleString();
     let html = `<div><strong>${escapeHtml(t.subject)}</strong><div style="color:#666; font-size:0.95rem; margin-top:6px;">${escapeHtml(t.description)}</div>`;
@@ -438,8 +516,167 @@ function showTicketDetail(id) {
         html += `<div style="margin-top:10px; color:#666;">No hay archivos adjuntos.</div>`;
     }
 
+    // timeline
+    html += `<div class="timeline">`;
+    const hist = (t.history || []).slice().reverse();
+    if(hist.length === 0) html += `<div class="tl-item"><div class="tl-content">Sin historial.</div></div>`;
+    hist.forEach(h => {
+        const when = h.timestamp ? new Date(h.timestamp).toLocaleString() : '';
+        const note = h.note ? escapeHtml(String(h.note)) : '';
+        html += `<div class="tl-item"><div class="tl-bullet" style="background:${t.urgent ? '#e74c3c' : '#2d7cc8'}"></div><div class="tl-content"><strong>${escapeHtml(h.status || '')}</strong><div class="tl-meta">${escapeHtml(h.actor||'')} • ${when}</div><div style="margin-top:6px;color:#444">${note}</div></div></div>`;
+    });
+    html += `</div>`;
+
+    // feedback area for reporter when ticket was just closed
+    if (t.needsFeedback && currentUser && currentUser.name && currentUser.name === (t.reporter || '')){
+        html += `<div style="margin-top:12px; border-top:1px solid #f2f4f6; padding-top:12px;">
+            <div style="font-weight:700; margin-bottom:8px;">Valora la atención recibida</div>
+            <div id="feedback-stars" style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-action feedback-star" data-score="1">😞</button>
+                <button class="btn-action feedback-star" data-score="2">😐</button>
+                <button class="btn-action feedback-star" data-score="3">🙂</button>
+                <button class="btn-action feedback-star" data-score="4">😄</button>
+                <button class="btn-action feedback-star" data-score="5">🎉</button>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <input id="feedback-comment" class="form-input" placeholder="Deja un comentario (opcional)" />
+                <button id="feedback-submit" class="btn-submit">Enviar valoración</button>
+            </div>
+        </div>`;
+    }
+
+    // admin actions placeholder (rendered only for admins via JS)
+    html += `<div id="admin-actions-area"></div>`;
+
     html += `</div>`;
     ticketDetailContent.innerHTML = html;
+
+    // if admin, render controls
+    if(currentUser && currentUser.isAdmin){
+        const adminArea = document.getElementById('admin-actions-area');
+        if(adminArea){
+                        adminArea.innerHTML = `
+                                <div style="margin-top:12px;border-top:1px solid #f2f4f6;padding-top:12px;">
+                                        <label style="font-weight:700">Acciones administrativas</label>
+                                        <div style="display:flex; gap:8px; margin-top:8px; align-items:flex-start; flex-wrap:wrap;">
+                                                <div style="min-width:220px;">
+                                                    <div style="font-weight:600; margin-bottom:6px;">Cambiar estado</div>
+                                                    <select id="detail-status-select" class="form-select">
+                                                        <option value="Abierto">Abierto</option>
+                                                        <option value="Asignado a técnico">Asignado a técnico</option>
+                                                        <option value="En proceso">En proceso</option>
+                                                        <option value="Esperando respuesta del usuario">Esperando respuesta del usuario</option>
+                                                        <option value="Solucionado">Solucionado</option>
+                                                    </select>
+                                                </div>
+                                                <div style="min-width:220px;">
+                                                    <div style="font-weight:600; margin-bottom:6px;">Asignar a técnico</div>
+                                                    <select id="detail-assign-select" class="form-select">
+                                                        ${getTechnicianOptionsHtml(t.assignedTo)}
+                                                    </select>
+                                                </div>
+                                                <div style="flex:1; min-width:260px;">
+                                                    <div style="font-weight:600; margin-bottom:6px;">Comentario público (al usuario)</div>
+                                                    <textarea id="detail-comment" class="form-textarea" placeholder="Comentario para el usuario (opcional)" style="height:80px;"></textarea>
+                                                </div>
+                                                <div style="display:flex; flex-direction:column; gap:8px;"><button id="detail-save-changes" class="btn-submit">Guardar</button></div>
+                                        </div>
+
+                                        <div style="margin-top:12px; border-top:1px dashed #f2f4f6; padding-top:12px;">
+                                                <div style="font-weight:700; margin-bottom:8px;">Notas internas (privadas para administradores)</div>
+                                                <div id="internal-notes-list" style="display:flex; flex-direction:column; gap:8px; max-height:140px; overflow:auto; padding-bottom:6px;">
+                                                    ${ (t.internalNotes || []).map(n => `<div style="padding:8px;border-radius:8px;background:#fff8ec;border:1px solid #fdebd0;"><div style="font-weight:700;">${escapeHtml(n.actor||'')}</div><div style="font-size:0.85rem;color:#666">${new Date(n.timestamp).toLocaleString()}</div><div style="margin-top:6px;color:#333">${escapeHtml(n.text)}</div></div>`).join('') }
+                                                </div>
+                                                <div style="display:flex; gap:8px; margin-top:8px;">
+                                                    <input id="internal-note-input" class="form-input" placeholder="Añadir nota privada" />
+                                                    <button id="internal-note-add" class="btn-action">Añadir</button>
+                                                </div>
+                                        </div>
+                                </div>
+                        `;
+            // set current status value
+            const sel = document.getElementById('detail-status-select');
+            if(sel) sel.value = t.status;
+            // set assigned technician select value (options already rendered)
+            const assignSel = document.getElementById('detail-assign-select');
+            if(assignSel) assignSel.value = t.assignedTo || '';
+            const saveBtn = document.getElementById('detail-save-changes');
+            if(saveBtn){
+                saveBtn.addEventListener('click', ()=>{
+                    const newStatus = document.getElementById('detail-status-select').value;
+                    const comment = document.getElementById('detail-comment').value.trim();
+                    const assigned = document.getElementById('detail-assign-select').value || null;
+                    // append history for status change
+                    t.history = t.history || [];
+                    t.history.push({ status: newStatus, actor: currentUser && currentUser.name ? currentUser.name : 'Administrador', timestamp: new Date(), note: comment || `Estado cambiado a ${newStatus}` });
+                    // assign technician if changed
+                    const prevAssigned = t.assignedTo || null;
+                    t.assignedTo = assigned;
+                    if(prevAssigned !== assigned && assigned){
+                        t.history.push({ status: 'Asignado', actor: currentUser && currentUser.name ? currentUser.name : 'Administrador', timestamp: new Date(), note: `Asignado a ${assigned}` });
+                        // notify assigned technician
+                        pushNotification(assigned, t.id, `Se te ha asignado el ticket ${t.id}: ${t.subject}`);
+                    }
+                    t.status = newStatus;
+                    if(newStatus === 'Solucionado') {
+                        t.needsFeedback = true;
+                        t.history.push({ status: 'Feedback solicitado', actor: currentUser && currentUser.name ? currentUser.name : 'Administrador', timestamp: new Date(), note: 'Se solicita valoración al cerrar la incidencia' });
+                    }
+                    saveState();
+                    // notify reporter
+                    pushNotification(t.reporter || 'user', t.id, `El ticket ${t.id} ha cambiado a: ${newStatus}` + (comment ? ` — ${comment}` : ''));
+                    // re-render modal content
+                    showTicketDetail(t.id);
+                    renderTicketList();
+                });
+            }
+            // internal notes add
+            const addNoteBtn = document.getElementById('internal-note-add');
+            const noteInput = document.getElementById('internal-note-input');
+            if(addNoteBtn){
+                addNoteBtn.addEventListener('click', ()=>{
+                    const txt = noteInput && noteInput.value && noteInput.value.trim();
+                    if(!txt) { showTemporaryMessage('Escribe una nota interna antes de añadir.', 'info'); return; }
+                    t.internalNotes = t.internalNotes || [];
+                    t.internalNotes.push({ actor: currentUser && currentUser.name ? currentUser.name : 'Administrador', text: txt, timestamp: new Date() });
+                    saveState();
+                    // re-render modal to show new note
+                    showTicketDetail(t.id);
+                    showTemporaryMessage('Nota interna añadida.', 'success');
+                });
+            }
+        }
+    }
+
+    // attach feedback handlers if feedback area exists
+    const fbSubmit = document.getElementById('feedback-submit');
+    if (fbSubmit) {
+        let selectedScore = null;
+        const starButtons = Array.from(document.querySelectorAll('.feedback-star'));
+        starButtons.forEach(sb => {
+            sb.addEventListener('click', (ev) => {
+                selectedScore = Number(ev.currentTarget.getAttribute('data-score')) || null;
+                // visual selection
+                starButtons.forEach(s => s.classList.remove('selected'));
+                ev.currentTarget.classList.add('selected');
+            });
+        });
+        fbSubmit.addEventListener('click', () => {
+            const commentEl = document.getElementById('feedback-comment');
+            const comment = commentEl ? commentEl.value.trim() : '';
+            if (!selectedScore) { showTemporaryMessage('Selecciona una valoración antes de enviar.', 'info'); return; }
+            // persist feedback on ticket
+            t.feedback = { score: selectedScore, comment: comment, by: currentUser && currentUser.name ? currentUser.name : 'Usuario', at: new Date() };
+            t.needsFeedback = false;
+            saveState();
+            pushNotification('admin', t.id, `Valoración recibida para ${t.id}: ${selectedScore}★`);
+            showTemporaryMessage('Gracias por tu valoración.', 'success');
+            // re-open modal to refresh content (which will hide feedback area)
+            showTicketDetail(t.id);
+            renderTicketList();
+        });
+    }
+
     ticketDetailModal.style.display = 'flex';
 }
 
@@ -603,6 +840,71 @@ renderTicketList();
 
 // Update SLA timers every minute
 setInterval(renderTicketList, 60000);
+
+// Initialize notifications and UI handlers
+loadNotifications();
+loadTechnicians();
+renderNotificationBadge();
+
+// notification bell toggle
+const notifBell = document.getElementById('notification-bell');
+const notifDropdown = document.getElementById('notifications-dropdown');
+if(notifBell){
+    notifBell.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(!notifDropdown) return;
+        const shown = notifDropdown.style.display === 'block';
+        if(shown) notifDropdown.style.display = 'none';
+        else { notifDropdown.style.display = 'block'; renderNotificationsDropdown(); }
+    });
+}
+document.addEventListener('click', ()=>{ if(notifDropdown) notifDropdown.style.display = 'none'; });
+
+// Urgent incident handlers
+const urgentBtn = document.getElementById('urgent-btn');
+const urgentModalEl = document.getElementById('urgent-modal');
+const urgentConfirm = document.getElementById('urgent-confirm');
+const urgentCancel = document.getElementById('urgent-cancel');
+const urgentJust = document.getElementById('urgent-justification');
+if(urgentBtn){
+    urgentBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(urgentModalEl) urgentModalEl.style.display = 'flex'; });
+}
+if(urgentCancel){ urgentCancel.addEventListener('click', (e)=>{ e.preventDefault(); if(urgentModalEl) urgentModalEl.style.display = 'none'; }); }
+if(urgentConfirm){
+    urgentConfirm.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const justification = urgentJust && urgentJust.value && urgentJust.value.trim();
+        if(!justification){ showTemporaryMessage('Por favor indica una justificación para marcar como urgente.', 'info'); return; }
+        // create urgent ticket immediately using current form values
+        const subject = document.getElementById('subject').value.trim() || ('Urgente ' + (new Date()).toLocaleString());
+        const description = document.getElementById('description').value.trim() || '';
+        const now = new Date();
+        const deadline = new Date(now.getTime() + (SLA_HOURS['critical'] * 60 * 60 * 1000));
+        const reporter = currentUser && currentUser.name ? currentUser.name : 'Anónimo';
+        const urgentTicket = {
+            id: '#' + String(ticketCounter++).padStart(3, '0'),
+            subject: subject,
+            assetId: document.getElementById('asset-id') ? document.getElementById('asset-id').value.trim() : null,
+            description: description,
+            priority: 'critical',
+            status: 'Abierto',
+            createdAt: now,
+            slaDeadline: deadline,
+            reporter,
+            attachments: attachmentsTemp.slice(),
+            history: [{ status: 'Recibido (Urgente)', actor: reporter, timestamp: now, note: justification }],
+            urgent: true
+        };
+        tickets.push(urgentTicket);
+        saveState();
+        pushNotification('admin', urgentTicket.id, `INCIDENCIA URGENTE: ${urgentTicket.id} - ${urgentTicket.subject}`);
+        showTemporaryMessage('Incidencia urgente creada y notificada al equipo.', 'success');
+        // reset form and close modal
+        ticketForm.reset(); attachmentsTemp = []; if(attachmentPreview) attachmentPreview.innerHTML = '';
+        if(urgentModalEl) urgentModalEl.style.display = 'none';
+        renderTicketList();
+    });
+}
 
 /* --- FAQ Assistant (simple client-side 'IA') --- */
 // Knowledge base: short answers and keywords
