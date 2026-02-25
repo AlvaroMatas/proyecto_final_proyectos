@@ -32,7 +32,6 @@
         <div class="sidebar-footer">
             <div class="profile">
                 <div class="profile-avatar" aria-hidden="true">👤</div>
-                <button id="notification-bell" class="btn-action notification-bell" title="Notificaciones">🔔<span id="notif-count" class="notif-count" style="display:none">0</span></button>
                 <div class="profile-info">
                     <div class="profile-name" id="profile-name">Invitado</div>
                     <small class="profile-role" id="profile-role">Visitante</small>
@@ -49,7 +48,6 @@
             <button id="profile-switch" class="btn-action">Cambiar usuario</button>
             <button id="profile-logout" class="btn-action">Cerrar sesión</button>
         </div>
-        <div id="notifications-dropdown" class="notifications-dropdown" style="display:none;"></div>
     </nav>
 
     <main class="main-content">
@@ -73,7 +71,6 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Equipo</th>
                         <th>Asunto</th>
                         <th>Prioridad</th>
                         <th>Estado</th>
@@ -84,7 +81,7 @@
                 </thead>
                 <tbody id="ticket-list-body">
                     <tr>
-                        <td colspan="8" style="text-align: center; color: gray;">No hay tickets por el momento.</td>
+                        <td colspan="5" style="text-align: center; color: gray;">No hay tickets por el momento.</td>
                     </tr>
                 </tbody>
             </table>
@@ -98,11 +95,6 @@
                 <div class="form-group">
                     <label class="form-label">Asunto de la incidencia</label>
                     <input type="text" id="subject" class="form-input" placeholder="Ej: No puedo acceder al correo" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Equipo / ID del activo (opcional)</label>
-                    <input type="text" id="asset-id" class="form-input" placeholder="Ej: PC-042, IMPRESORA-03" />
                 </div>
 
                 <div class="form-group">
@@ -130,27 +122,14 @@
                 </div>
 
                 <button type="submit" class="btn-submit">Crear Ticket</button>
-                <button type="button" id="urgent-btn" class="btn-urgent">Incidencia Urgente</button>
             </form>
         </section>
-
-        <!-- Urgent justification modal -->
-        <div id="urgent-modal" class="confirm-modal" style="display:none;">
-            <div class="confirm-card">
-                <h4>Incidencia Urgente - Justificación</h4>
-                <p style="color:#666;">Las incidencias urgentes saltan procesos normales. Indica por qué esta incidencia es crítica:</p>
-                <textarea id="urgent-justification" class="form-textarea" placeholder="Describe por qué es urgente" style="height:100px;"></textarea>
-                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
-                    <button id="urgent-cancel" class="btn-action">Cancelar</button>
-                    <button id="urgent-confirm" class="btn-submit">Confirmar Urgente</button>
-                </div>
-            </div>
-        </div>
 
                 <section id="view-help" class="section-view">
                         <div class="header"><h2>Guía rápida — Problemas comunes</h2></div>
                         <div class="help-panel">
                                 <p class="help-intro">Aquí tienes soluciones rápidas y acciones recomendadas. Expande cada sección para ver los pasos y usa "Crear ticket" para registrar el problema automáticamente.</p>
+
                                 <details class="help-item">
                                     <summary>No hay conexión a Internet</summary>
                                     <div class="help-body">

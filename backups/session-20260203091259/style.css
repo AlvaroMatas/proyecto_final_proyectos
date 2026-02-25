@@ -250,10 +250,6 @@
 .btn-action { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; background: white; cursor: pointer; }
 .btn-action:hover { background: #f2f2f2; }
 
-/* Feedback stars */
-.feedback-star { font-size:1.15rem; padding:8px 10px; }
-.feedback-star.selected { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-
 /* Attachment previews */
 .attachment-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .attachment-item { display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fafafa; border:1px solid #eee; }
@@ -293,24 +289,6 @@
 .help-create-ticket { background: #2d7cc8; color: white; border: none; padding:8px 12px; border-radius:8px; cursor:pointer; }
 .help-create-ticket:hover { background:#2467ab; }
 .help-note { margin-top:12px; color:#666; }
-
-/* Notifications bell */
-.notification-bell { position: absolute; right: 18px; top: 18px; padding:6px 8px; border-radius:8px; }
-.notif-count { display:inline-block; min-width:18px; height:18px; font-size:12px; line-height:18px; border-radius:999px; background:#e74c3c; color:#fff; text-align:center; margin-left:6px; padding:0 6px; }
-.notifications-dropdown { position:absolute; right:18px; bottom:120px; width:320px; max-height:360px; overflow:auto; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,0.12); padding:8px; z-index:70; }
-.notifications-dropdown .notif-item { padding:8px; border-bottom:1px solid #f2f4f6; font-size:0.95rem; }
-.notifications-dropdown .notif-item.unread { background: #fff8ec; }
-
-/* Ticket timeline */
-.timeline { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
-.tl-item { display:flex; gap:8px; align-items:flex-start; }
-.tl-bullet { width:10px; height:10px; border-radius:50%; margin-top:6px; flex:0 0 10px; }
-.tl-content { background:#fbfdff; border:1px solid #eef6ff; padding:8px 10px; border-radius:8px; flex:1; }
-.tl-meta { color:#666; font-size:0.85rem; margin-top:6px; }
-
-/* Urgent button */
-.btn-urgent { background: linear-gradient(90deg,#e74c3c,#c0392b); color:white; border:none; padding:10px 14px; border-radius:8px; margin-left:12px; cursor:pointer; }
-.btn-urgent:hover { opacity:0.95; }
 
 /* Confirmation modal */
 .confirm-modal {
@@ -420,19 +398,6 @@ body.dark .section-view {
     box-shadow: 0 2px 20px rgba(0,0,0,0.6);
 }
 
-/* FAQ assistant styles */
-.faq-assistant { margin: 14px 0 18px 0; padding: 12px; border-radius: 10px; background: #fbfdff; border: 1px solid #eef6ff; }
-.faq-assistant h3 { margin: 0 0 8px 0; font-size: 1.05rem; }
-.assistant-convo { max-height: 220px; overflow-y: auto; padding: 8px; display:flex; flex-direction:column; gap:8px; }
-.assistant-bubble { max-width: 86%; padding: 8px 12px; border-radius: 12px; font-size: 0.95rem; line-height:1.25; }
-.assistant-bubble.user { align-self: flex-end; background: #2d7cc8; color: #fff; border-bottom-right-radius:4px; }
-.assistant-bubble.bot { align-self: flex-start; background: #f2f6fb; color: #123; border-bottom-left-radius:4px; }
-.assistant-input { display:flex; gap:8px; margin-top:10px; }
-.assistant-input input { flex:1; padding:10px 12px; border-radius:8px; border:1px solid #ddd; }
-.assistant-suggest { margin-top:8px; color:#555; font-size:0.95rem; }
-.assistant-create-ticket { margin-top:8px; }
-
-@media (max-width:720px) { .assistant-convo { max-height: 160px; } }
 
 body.dark .header h2 { color: #e6f0f8; }
 
